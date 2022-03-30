@@ -2,6 +2,7 @@ library(ggpattern)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(patchwork)
 
 
 df <- data.frame(start = c(1, 5, 6), 
@@ -11,13 +12,15 @@ df <- data.frame(start = c(1, 5, 6),
 
 p1 <- ggplot(df, aes(xmin = start, xmax = end, 
                ymin = id - 0.25, ymax = id + 0.25)) +
-  geom_rect()
+  geom_rect() +
+  ggtitle("I. Coverage")
 
 p2 <- ggplot(df, aes(xmin = start, xmax = end, 
                ymin = id - 0.25, ymax = id + 0.25, 
                fill = type)) +
   geom_rect() +
-  scale_fill_manual(values = c("#D5E8D4", "#F8CECC"))
+  scale_fill_manual(values = c("#D5E8D4", "#F8CECC")) +
+  ggtitle("II. Coverage and class")
 
 
 all_pos <- c(min(df[["start"]]):max(df[["end"]]))
@@ -44,9 +47,17 @@ hm_df <- lapply(unique(df[["type"]]), function(ith_type) {
   summarise(type = paste0(type_name, collapse = "")) %>% 
   inner_join(col_df, by = c("type" = "name"))
 
-ggplot(hm_df, aes(xmin = aa_pos, xmax = aa_pos + 1, 
+p3 <- ggplot(hm_df, aes(xmin = aa_pos, xmax = aa_pos + 1, 
                ymin = -0.25, ymax = 0.25, 
                pattern_fill  = I(col1),
                pattern_fill2 = I(col2),)) +
   geom_rect_pattern(color = "black", pattern = "gradient") +
-  scale_y_continuous(limits = c(-5, 5))
+  scale_y_continuous(limits = c(-1, 1)) +
+  ggtitle("IIIA. Sequence heatmap")
+
+png("test.png", height = 480*4.5, width = 480*2.5, res = 150)
+p1/p2/p3 * 
+  theme_bw() * 
+  theme(axis.text.y = element_blank(), 
+                              panel.grid = element_blank())
+dev.off()
